@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "cb3497a4-c6d0-4f76-b3de-ad7ebb940d1a",
+		"_postman_id": "1f59e3dc-0e83-44a6-9dad-a93e6db567ef",
 		"name": "HotelRatesApp",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
@@ -79,7 +79,7 @@
 			"response": []
 		},
 		{
-			"name": "https://localhost:{{port}}/api/reservations",
+			"name": "https://localhost:{{port}}/api/reservations/Nightly",
 			"request": {
 				"method": "POST",
 				"header": [],
@@ -93,7 +93,7 @@
 					}
 				},
 				"url": {
-					"raw": "https://localhost:{{port}}/api/reservations",
+					"raw": "https://localhost:{{port}}/api/reservations/Nightly",
 					"protocol": "https",
 					"host": [
 						"localhost"
@@ -101,7 +101,38 @@
 					"port": "{{port}}",
 					"path": [
 						"api",
-						"reservations"
+						"reservations",
+						"Nightly"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "https://localhost:{{port}}/api/reservations/Interval",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"reservationStart\": \"2020-07-01\",\r\n    \"reservationEnd\": \"2020-07-03\",\r\n    \"ratePlanId\": -3,\r\n    \"roomId\": -2,\r\n    \"amountOfAdults\": 2,\r\n    \"amountOfChildren\":0\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://localhost:{{port}}/api/reservations/Interval",
+					"protocol": "https",
+					"host": [
+						"localhost"
+					],
+					"port": "{{port}}",
+					"path": [
+						"api",
+						"reservations",
+						"Interval"
 					]
 				}
 			},
