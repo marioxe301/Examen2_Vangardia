@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Linq;
 
-namespace hotel.rates.Core
+namespace Hotel.Rates.Core
 {
     public interface IRepository<T>
     {

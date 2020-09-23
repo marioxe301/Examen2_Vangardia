@@ -2,7 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Hotel.Rates.Core;
 using Hotel.Rates.Data;
+using Hotel.Rates.Data.Repositories;
+using Hotel.Rates.Services;
+using Hotel.Rates.Services.Interface;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
@@ -29,7 +33,14 @@ namespace Hotel.Rates.Api
         {
             services.AddControllers().AddNewtonsoftJson(x => x.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore); ;
             services.AddDbContext<InventoryContext>((s, o) => o.UseSqlite("Data Source=data.db"));
-
+            services.AddScoped<IRepository<Season>, SeasonsRepository>();
+            services.AddScoped<IRepository<Room>, RoomsRepository>();
+            services.AddScoped<IRepository<RatePlan>, RatePlansRepository>();
+            services.AddScoped<IRepository<NightlyRatePlan>, NightlyRatePlansRepository>();
+            services.AddScoped<IRepository<IntervalRatePlan>, IntervalRatePlansRepository>();
+            services.AddScoped<IRatePlanService, RatePlanService>();
+            services.AddScoped<IReservationService, ReservationService>();
+            services.AddScoped<IRoomServices, RoomServices>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

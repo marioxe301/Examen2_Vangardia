@@ -1,5 +1,7 @@
-﻿using Hotel.Rates.Core.TransferObjects;
+﻿using Hotel.Rates.Core;
+using Hotel.Rates.Core.TransferObjects;
 using Hotel.Rates.Data;
+using Hotel.Rates.Services.Interface;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -10,44 +12,32 @@ using System.Threading.Tasks;
 namespace Hotel.Rates.Api.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
     public class ReservationsController : ControllerBase
     {
-        private readonly InventoryContext _context;
+        private readonly IReservationService reservationService;
 
-        public ReservationsController(InventoryContext context)
+        public ReservationsController(IReservationService reservationService)
         {
-            this._context = context;
+            this.reservationService = reservationService;
+        }
+        [HttpPost]
+        [Route("api/[controller]/Nightly")]
+        public IActionResult PostNightly([FromBody] ReservationTransferObject ReservationTransferObject)
+        {
+            var result = reservationService.MakeReservationNighlyPlan(ReservationTransferObject);
+            if (result.ResponseCode == ResponseCode.Success)
+                return Ok(result.Result);
+            return BadRequest(result.Error);
         }
 
         [HttpPost]
-        public IActionResult Post([FromBody]ReservationTransferObject ReservationTransferObject)
+        [Route("api/[controller]/Interval")]
+        public IActionResult PostInterval([FromBody] ReservationTransferObject ReservationTransferObject)
         {
-            var ratePlan = _context
-                .NightlyRatePlans
-                .Include(r => r.Seasons)
-                .Include(r => r.RatePlanRooms)
-                .ThenInclude(r => r.Room)
-                .First(r => r.Id == ReservationTransferObject.RatePlanId);
-            var canReserve = ratePlan.Seasons
-                .Any(s => ReservationTransferObject.ReservationStart >= s.StartDate  && ReservationTransferObject.ReservationEnd <= s.EndDate );
-            var room = ratePlan.RatePlanRooms
-                .First(r => r.RoomId == ReservationTransferObject.RoomId && r.RatePlanId == ReservationTransferObject.RatePlanId);
-            var isRoomAvailable = room.Room.Amount > 0 &&
-                ReservationTransferObject.AmountOfAdults <= room.Room.MaxAdults &&
-                ReservationTransferObject.AmountOfChildren <= room.Room.MaxChildren;
-
-            if (canReserve && isRoomAvailable)
-            {
-                room.Room.Amount -= 1;
-                _context.SaveChanges();
-                var days = (ReservationTransferObject.ReservationEnd - ReservationTransferObject.ReservationStart).TotalDays;
-                return Ok(new
-                {
-                    Price = days * ratePlan.Price
-                });
-            }
-            return BadRequest();
+            var result = reservationService.MakeReservationIntervalPlan(ReservationTransferObject);
+            if (result.ResponseCode == ResponseCode.Success)
+                return Ok(result.Result);
+            return BadRequest(result.Error);
         }
     }
 }

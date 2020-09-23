@@ -1,4 +1,6 @@
-﻿using Hotel.Rates.Data;
+﻿using Hotel.Rates.Core;
+using Hotel.Rates.Data;
+using Hotel.Rates.Services.Interface;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -12,69 +14,29 @@ namespace Hotel.Rates.Api.Controllers
     [Route("api/[controller]")]
     public class RatePlansController : ControllerBase
     {
-        private readonly InventoryContext _context;
+        private readonly IRatePlanService ratePlanService;
 
-        public RatePlansController(InventoryContext context)
+        public RatePlansController(IRatePlanService ratePlanService)
         {
-            _context = context;
+            this.ratePlanService = ratePlanService;
         }
         
         [HttpGet]
         public IActionResult Get()
         {
-            var result = _context.RatePlans.Include(r => r.Seasons).Include(r => r.RatePlanRooms).ThenInclude(r => r.Room)
-                .Select(x => new
-                {
-                    RatePlanId = x.Id,
-                    RatePlanName = x.Name,
-                    x.RatePlanType,
-                    x.Price,
-                    Seasons = x.Seasons.Select(s => new
-                    {
-                        s.Id,
-                        s.StartDate,
-                        s.EndDate
-                    }),
-                    Rooms = x.RatePlanRooms.Select(r => new
-                    {
-                        r.Room.Name,
-                        r.Room.MaxAdults,
-                        r.Room.MaxChildren,
-                        r.Room.Amount
-                    })
-                });
-            return Ok(result);
+            var result = ratePlanService.GetAllRatePlans();
+            if (result.ResponseCode == ResponseCode.Success)
+                return Ok(result.Result);
+            return BadRequest(result.Error);
         }
 
         [HttpGet("{id}")]
         public IActionResult Get(int id)
         {
-            var ratePlan = _context.RatePlans
-                .Include(r => r.Seasons)
-                .Include(r => r.RatePlanRooms)
-                .ThenInclude(r => r.Room)
-                .FirstOrDefault(x => x.Id == id);
-
-            return Ok(new
-            {
-                RatePlanId = ratePlan.Id,
-                RatePlanName = ratePlan.Name,
-                ratePlan.RatePlanType,
-                ratePlan.Price,
-                Seasons = ratePlan.Seasons.Select(s => new
-                {
-                    s.Id,
-                    s.StartDate,
-                    s.EndDate
-                }),
-                Rooms = ratePlan.RatePlanRooms.Select(r => new
-                {
-                    r.Room.Name,
-                    r.Room.MaxAdults,
-                    r.Room.MaxChildren,
-                    r.Room.Amount
-                })
-              });
+            var result = ratePlanService.GetRatePlanById(id);
+            if (result.ResponseCode == ResponseCode.Success)
+                return Ok(result.Result);
+            return BadRequest(result.Error);
         }
     }
 }

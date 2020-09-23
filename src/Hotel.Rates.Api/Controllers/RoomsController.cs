@@ -1,4 +1,6 @@
-﻿using Hotel.Rates.Data;
+﻿using Hotel.Rates.Core;
+using Hotel.Rates.Data;
+using Hotel.Rates.Services.Interface;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
@@ -11,17 +13,20 @@ namespace Hotel.Rates.Api.Controllers
     [Route("api/[controller]")]
     public class RoomsController : ControllerBase
     {
-        private readonly InventoryContext _inventoryContext;
+        private readonly IRoomServices roomServices;
 
-        public RoomsController(InventoryContext inventoryContext)
+        public RoomsController(IRoomServices roomServices)
         {
-            _inventoryContext = inventoryContext;
+            this.roomServices = roomServices;
         }
 
         [HttpGet]
         public IActionResult Get()
         {
-            return Ok(_inventoryContext.Rooms);
+            var result = roomServices.getAllRooms();
+            if (result.ResponseCode == ResponseCode.Success)
+                return Ok(result.Result);
+            return BadRequest(result.Error);
         }
     }
 }

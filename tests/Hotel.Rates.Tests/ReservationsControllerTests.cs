@@ -1,10 +1,15 @@
 using Hotel.Rates.Api.Controllers;
+using Hotel.Rates.Core;
 using Hotel.Rates.Core.TransferObjects;
 using Hotel.Rates.Data;
+using Hotel.Rates.Tests.Builder;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
+using Moq;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using Xunit;
 
 namespace Hotel.Rates.Tests
@@ -14,6 +19,8 @@ namespace Hotel.Rates.Tests
         [Fact]
         public void Post_ValidNightlyRatePlanData_Returns200Ok()
         {
+            
+
             var reservation = new ReservationTransferObject
             {
                 AmountOfAdults = 1,
@@ -24,22 +31,18 @@ namespace Hotel.Rates.Tests
                 RoomId = -1
             };
 
-            var connection = new SqliteConnection("Data Source=:memory:");
+            var controllerBuilder = new ReservationControllerBuilder();
 
-            connection.Open();
+            var controllerMock = controllerBuilder.GetDefaultReservationService();
+            controllerMock.Setup(r => r.MakeReservationNighlyPlan(It.IsAny<ReservationTransferObject>()))
+                .Returns(ServiceResult<double>.SuccessResult(1000));
 
-            var dbContextOptions = new DbContextOptionsBuilder<InventoryContext>()
-                .UseSqlite(connection)
-                .Options;
+            var controller = controllerBuilder.WithReservationService(controllerMock.Object).Build();
 
-            var context = new InventoryContext(dbContextOptions);
-            context.Database.EnsureCreated();
-
-            var controller = new ReservationsController(context);
-
-            var response = controller.Post(reservation);
+            var response = controller.PostNightly(reservation);
 
             Assert.IsType<OkObjectResult>(response);
+
         }
 
         [Fact]
@@ -52,25 +55,76 @@ namespace Hotel.Rates.Tests
                 RatePlanId = -3,
                 ReservationStart = new DateTime(2020, 08, 01),
                 ReservationEnd = new DateTime(2020, 08, 03),
+                RoomId = -2
+            };
+
+            var controllerBuilder = new ReservationControllerBuilder();
+
+            var controllerMock = controllerBuilder.GetDefaultReservationService();
+            controllerMock.Setup(r => r.MakeReservationIntervalPlan(It.IsAny<ReservationTransferObject>()))
+                .Returns(ServiceResult<double>.SuccessResult(450));
+
+            var controller = controllerBuilder.WithReservationService(controllerMock.Object).Build();
+
+            var response = controller.PostInterval(reservation);
+
+            Assert.IsType<OkObjectResult>(response);
+        }
+
+        [Fact]
+        public void MakeReservation_ValidateResultNightlyRatePlan_Success()
+        {
+            var reservation = new ReservationTransferObject
+            {
+                AmountOfAdults = 1,
+                AmountOfChildren = 0,
+                RatePlanId = -1,
+                ReservationStart = new DateTime(2020, 07, 01),
+                ReservationEnd = new DateTime(2020, 07, 03),
                 RoomId = -1
             };
 
-            var connection = new SqliteConnection("Data Source=:memory:");
+            var expectedValue = 1000;
 
-            connection.Open();
+            var controllerBuilder = new ReservationControllerBuilder();
 
-            var dbContextOptions = new DbContextOptionsBuilder<InventoryContext>()
-                .UseSqlite(connection)
-                .Options;
+            var Mock = controllerBuilder.GetDefaultReservationService();
+            Mock.Setup(r => r.MakeReservationNighlyPlan(It.IsAny<ReservationTransferObject>()))
+                .Returns(ServiceResult<double>.SuccessResult(expectedValue));
 
-            var context = new InventoryContext(dbContextOptions);
-            context.Database.EnsureCreated();
+            var response = Mock.Object.MakeReservationNighlyPlan(reservation);
 
-            var controller = new ReservationsController(context);
+            Assert.Equal(response.ResponseCode, ResponseCode.Success);
+            Assert.Equal(response.Result, expectedValue);
 
-            var response = controller.Post(reservation);
 
-            Assert.IsType<OkObjectResult>(response);
+        }
+
+        [Fact]
+        public void MakeReservation_ValidateResultInternalRatePlan_Success()
+        {
+            var reservation = new ReservationTransferObject
+            {
+                AmountOfAdults = 1,
+                AmountOfChildren = 0,
+                RatePlanId = -3,
+                ReservationStart = new DateTime(2020, 07, 01),
+                ReservationEnd = new DateTime(2020, 07, 03),
+                RoomId = -2
+            };
+
+            var expectedValue = 450;
+
+            var controllerBuilder = new ReservationControllerBuilder();
+
+            var Mock = controllerBuilder.GetDefaultReservationService();
+            Mock.Setup(r => r.MakeReservationIntervalPlan(It.IsAny<ReservationTransferObject>()))
+                .Returns(ServiceResult<double>.SuccessResult(expectedValue));
+
+            var response = Mock.Object.MakeReservationIntervalPlan(reservation);
+
+            Assert.Equal(response.ResponseCode, ResponseCode.Success);
+            Assert.Equal(response.Result, expectedValue);
         }
     }
 }

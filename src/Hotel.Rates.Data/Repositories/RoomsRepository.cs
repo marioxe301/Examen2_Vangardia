@@ -6,23 +6,23 @@ using System.Text;
 
 namespace Hotel.Rates.Data.Repositories
 {
-    public class IntervalRatePlansRepository : IRepository<IntervalRatePlan>
+    public class RoomsRepository : IRepository<Room>
     {
         private readonly InventoryContext _inventoryContext;
 
-        public IntervalRatePlansRepository(InventoryContext inventoryContext)
+        public RoomsRepository(InventoryContext inventoryContext)
         {
             this._inventoryContext = inventoryContext;
         }
-        public IntervalRatePlan Add(IntervalRatePlan entity)
+        public Room Add(Room entity)
         {
-            _inventoryContext.IntervalRatePlans.Add(entity);
+            _inventoryContext.Rooms.Add(entity);
             return entity;
         }
 
-        public IQueryable<IntervalRatePlan> All()
+        public IQueryable<Room> All()
         {
-            return _inventoryContext.IntervalRatePlans;
+            return _inventoryContext.Rooms;
         }
 
         public int SaveChanges()
